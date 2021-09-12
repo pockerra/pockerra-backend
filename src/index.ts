@@ -1,4 +1,4 @@
-import express, {response} from 'express';
+import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth';
 import mongoose from 'mongoose';
@@ -42,11 +42,16 @@ const io = new Server(server, {
     }
 })
 
+// ========================= socketIO
 io.on('connection', (socket) => {
-    console.log('user connected: ' ,socket.id)
+    console.log('user connected: ', socket.id)
 
     socket.on('disconnect', () => {
         console.log('user disconnected: ' + socket.id)
+    })
+
+    socket.on('join-room', ({roomId, name}: { roomId: string, name: string }) => {
+        console.log(`User  with RoomId: ${roomId}, and name: ${name} Joined`)
     })
 })
 
