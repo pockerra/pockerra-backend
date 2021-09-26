@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import setTimer from './routes/setTimer';
 import {Server} from "socket.io";
 import http from "http"
+import socketCallback from "./socket";
+import socket from "./socket";
 
 
 const app = express();
@@ -43,17 +45,7 @@ const io = new Server(server, {
 })
 
 // ========================= socketIO
-io.on('connection', (socket) => {
-    console.log('user connected: ', socket.id)
-
-    socket.on('disconnect', () => {
-        console.log('user disconnected: ' + socket.id)
-    })
-
-    socket.on('join-room', ({roomId, name}: { roomId: string, name: string }) => {
-        console.log(`User  with RoomId: ${roomId}, and name: ${name} Joined`)
-    })
-})
+io.on('connection', socketCallback)
 
 server.listen(PORT, () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${PORT}`);
