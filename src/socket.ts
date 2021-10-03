@@ -1,12 +1,16 @@
 import { Socket, Server } from 'socket.io';
 import { DefaultEventsMap } from 'socket.io/dist/typed-events';
-import { addUser, getUsersInRoom, removeUser, selectCard } from './lib/users';
-import { Room, UserId } from './types';
+import { addUser, getUser, getUsersInRoom, removeUser, selectCard } from './repository/users';
+import { RoomName, UserId } from './types';
 import { Card } from './types/user';
 
 const socketCallback = (socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap>, io: Server) => {
   socket.on('disconnect', () => {
-    removeUser(socket.id);
+    const user = getUser(socket.id);
+    if (user) {
+      removeUser(user.id);
+      if (user.room) io.in(user.room).emit('user-left', { removedUser: user, usersInRoom: getUsersInRoom(user.room) });
+    }
   });
 
   socket.on('join-room', async ({ roomId, name }: { roomId: string; name: string }) => {
@@ -18,7 +22,7 @@ const socketCallback = (socket: Socket<DefaultEventsMap, DefaultEventsMap, Defau
     }
   });
 
-  socket.on('select-card', (data: { card: Card; room: Room; userId: UserId }) => {
+  socket.on('select-card', (data: { card: Card; room: RoomName; userId: UserId }) => {
     selectCard(data.userId, data.card);
     io.in(data.room).emit('selected-card', { data, usersInRoom: getUsersInRoom(data.room) });
   });

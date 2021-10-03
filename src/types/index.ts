@@ -1,3 +1,4 @@
-import {Room, User, UserId } from "./user";
+import { Room } from './room';
+import { RoomName, User, UserId } from './user';
 
-export {User, UserId, Room}
+export { User, UserId, RoomName, Room };

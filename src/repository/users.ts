@@ -1,4 +1,4 @@
-import { Room, User, UserId } from '../types';
+import { RoomName, User, UserId } from '../types';
 import { Card } from '../types/user';
 
 let users: Array<User> = [];
@@ -35,6 +35,6 @@ const selectCard = (id: UserId, card: Card) => {
     return user;
   });
 };
-const getUsersInRoom = (room: Room) => users.filter((user) => user.room === room);
+const getUsersInRoom = (room: RoomName) => users.filter((user) => user.room === room);
 
 export { addUser, removeUser, getUser, getUsersInRoom, selectCard };
