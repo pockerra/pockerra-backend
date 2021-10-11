@@ -35,6 +35,16 @@ const selectCard = (id: UserId, card: Card) => {
     return user;
   });
 };
+
+const resetCards = (roomName: RoomName) => {
+  users = users.map((user) => {
+    if (user.room === roomName) {
+      user.card = 0;
+    }
+    return user;
+  });
+};
+
 const getUsersInRoom = (room: RoomName) => users.filter((user) => user.room === room);
 
-export { addUser, removeUser, getUser, getUsersInRoom, selectCard };
+export { addUser, removeUser, getUser, getUsersInRoom, selectCard, resetCards };

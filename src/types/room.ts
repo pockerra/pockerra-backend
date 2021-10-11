@@ -2,5 +2,5 @@ import { RoomName } from './user';
 
 export interface Room {
   name: RoomName;
-  hidden: Boolean;
+  hidden: boolean;
 }

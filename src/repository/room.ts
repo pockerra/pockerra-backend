@@ -10,6 +10,10 @@ const removeRoom = (roomName: RoomName) => {
   rooms.filter((r) => r.name !== roomName);
 };
 
+const getRooms = (): Array<Room> => {
+  return rooms;
+};
+
 const revealCards = (roomName: RoomName) => {
   rooms = rooms.map((r) => {
     if (r.name === roomName) {
@@ -20,4 +24,18 @@ const revealCards = (roomName: RoomName) => {
   });
 };
 
-export { addRoom, removeRoom, revealCards };
+const startOver = (roomName: RoomName) => {
+  rooms = rooms.map((r) => {
+    if (r.name === roomName) {
+      r.hidden = true;
+    }
+
+    return r;
+  });
+};
+
+const isRoomCreated = (name: RoomName) => {
+  return !!rooms.find((r) => r.name === name);
+};
+
+export { addRoom, removeRoom, revealCards, isRoomCreated, getRooms, startOver };
