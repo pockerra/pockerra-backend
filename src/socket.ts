@@ -3,7 +3,7 @@ import { DefaultEventsMap } from 'socket.io/dist/typed-events';
 import { RoomName, UserId } from './types';
 import { Card } from './types/user';
 import { addUser, getUser, getUsersInRoom, removeUser, resetCards, selectCard } from './repository/users';
-import { addRoom, getRooms, isRoomCreated, revealCards, startOver } from './repository/room';
+import { addRoom, getRoomByName, getRooms, isRoomCreated, revealCards, startOver } from './repository/room';
 
 const socketCallback = (socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap>, io: Server) => {
   socket.on('disconnect', () => {
@@ -28,7 +28,7 @@ const socketCallback = (socket: Socket<DefaultEventsMap, DefaultEventsMap, Defau
       io.in(user.room).emit('user-joined', {
         joinedUser: name,
         usersInRoom: getUsersInRoom(user.room),
-        room: getRooms(),
+        room: getRoomByName(user.room),
       });
     }
   });
