@@ -1,9 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import authRoutes from './routes/auth';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import setTimer from './routes/setTimer';
 import { Server } from 'socket.io';
 import http from 'http';
 import socketCallback from './socket';
@@ -16,14 +13,7 @@ dotenv.config();
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/user', authRoutes);
-app.use('/api/set-timer', setTimer);
 const server = http.createServer(app);
-
-mongoose.connect(process.env.DB_CONNECT || 'mongodb://127.0.0.1:27017', () => {
-  console.log('✅ Connected to DB');
-});
 
 app.get('/', (req, res) => {
   return res.send(`<html lang="en">
