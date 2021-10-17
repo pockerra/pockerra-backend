@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: `https://pockerra.herokuapp.com`,
+    origin: process.env.CLIENT_ORIGIN || `https://pockerra.herokuapp.com`,
     methods: ['GET', 'POST'],
   },
 });
