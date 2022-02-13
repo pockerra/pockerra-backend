@@ -1,50 +1,63 @@
+// noinspection JSIgnoredPromiseFromCall
+
 import { RoomName, User, UserId } from '../types';
 import { Card } from '../types/user';
+import { model, Schema } from 'mongoose';
 
-let users: Array<User> = [];
+const userSchema = new Schema<User>({
+  id: { type: String, required: true },
+  name: { type: String, required: true },
+  room: { type: String, required: true },
+  card: { type: Number, required: false },
+});
 
-const addUser = ({ id, name, room }: User) => {
+const userModel = model<User>('User', userSchema);
+
+const addUser = async ({ id, name, room }: User) => {
   name = name.trim().toLowerCase();
   room = room?.trim().toLowerCase();
 
-  const existingUser = users.find((user) => user.room === room && user.name === name);
+  const existingUser = await userModel.exists({ id, room });
 
   if (!name || !room) return { error: 'Username and room are required.' };
   if (existingUser) return { error: 'Username already exists.' };
 
   const user = { id, name, room };
 
-  users.push(user);
+  const doc = await userModel.create(user);
+
+  await doc.save();
 
   return { user };
 };
 
-const removeUser = (id: UserId) => {
-  const index = users.findIndex((user) => user.id === id);
+const removeUser = async (id: UserId) => {
+  await userModel.deleteOne({ id });
 
-  if (index !== -1) return users.splice(index, 1)[0];
+  return true;
 };
 
-const getUser = (id: UserId) => users.find((user) => user.id === id);
-
-const selectCard = (id: UserId, card: Card) => {
-  users = users.map((user) => {
-    if (user.id === id) {
-      user.card = card;
-    }
-    return user;
-  });
+const getUser = async (id: UserId) => {
+  return userModel.findOne({ id });
 };
 
-const resetCards = (roomName: RoomName) => {
-  users = users.map((user) => {
-    if (user.room === roomName) {
-      user.card = 0;
-    }
-    return user;
-  });
+const selectCard = async (id: UserId, card: Card) => {
+  const user = await getUser(id);
+
+  if (!user) return { error: 'User not found.' };
+  await userModel.updateOne({ id }, { $set: { card } });
+
+  return true;
 };
 
-const getUsersInRoom = (room: RoomName) => users.filter((user) => user.room === room);
+const resetCards = async (roomName: RoomName) => {
+  await userModel.updateMany({ room: roomName }, { $set: { card: 0 } });
+
+  return getUsersInRoom(roomName);
+};
+
+const getUsersInRoom = async (room: RoomName) => {
+  return userModel.find({ room });
+};
 
 export { addUser, removeUser, getUser, getUsersInRoom, selectCard, resetCards };

@@ -5,20 +5,21 @@ import { Card } from './types/user';
 import { addUser, getUser, getUsersInRoom, removeUser, resetCards, selectCard } from './repository/users';
 import { addRoom, getRoomByName, getRooms, isRoomCreated, revealCards, startOver } from './repository/room';
 
-const socketCallback = (socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap>, io: Server) => {
-  socket.on('disconnect', () => {
-    const user = getUser(socket.id);
+const socketCallback = async (socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap>, io: Server) => {
+  socket.on('disconnect', async () => {
+    const user = await getUser(socket.id);
     if (user) {
-      removeUser(user.id);
-      if (user.room) io.in(user.room).emit('user-left', { removedUser: user, usersInRoom: getUsersInRoom(user.room) });
+      await removeUser(user.id);
+      if (user.room)
+        io.in(user.room).emit('user-left', { removedUser: user, usersInRoom: await getUsersInRoom(user.room) });
     }
   });
 
   socket.on('join-room', async ({ roomId, name }: { roomId: string; name: string }) => {
-    const { error, user } = addUser({ id: socket.id, name, room: roomId });
+    const { error, user } = await addUser({ id: socket.id, name, room: roomId });
 
-    if (user && !isRoomCreated(user.room)) {
-      addRoom(user.room);
+    if (user && !(await isRoomCreated(user.room))) {
+      await addRoom(user.room);
     }
 
     if (error) return console.error(error);
@@ -27,30 +28,30 @@ const socketCallback = (socket: Socket<DefaultEventsMap, DefaultEventsMap, Defau
       await socket.join(user.room);
       io.in(user.room).emit('user-joined', {
         joinedUser: name,
-        usersInRoom: getUsersInRoom(user.room),
-        room: getRoomByName(user.room),
+        usersInRoom: await getUsersInRoom(user.room),
+        room: await getRoomByName(user.room),
       });
     }
   });
 
-  socket.on('select-card', (data: { card: Card; room: RoomName; userId: UserId }) => {
-    selectCard(data.userId, data.card);
-    io.in(data.room).emit('selected-card', { data, usersInRoom: getUsersInRoom(data.room) });
+  socket.on('select-card', async (data: { card: Card; room: RoomName; userId: UserId }) => {
+    await selectCard(data.userId, data.card);
+    io.in(data.room).emit('selected-card', { data, usersInRoom: await getUsersInRoom(data.room) });
   });
 
-  socket.on('reveal', ({ roomName }: { roomName: RoomName }) => {
-    revealCards(roomName);
-    io.in(roomName).emit('revealed', { room: getRooms() });
+  socket.on('reveal', async ({ roomName }: { roomName: RoomName }) => {
+    await revealCards(roomName);
+    io.in(roomName).emit('revealed', { room: await getRooms() });
   });
 
-  socket.on('start-countdown', ({ roomName }: { roomName: RoomName }) => {
-    socket.to(roomName).emit('start-countdown', { room: getRooms() });
+  socket.on('start-countdown', async ({ roomName }: { roomName: RoomName }) => {
+    socket.to(roomName).emit('start-countdown', { room: await getRooms() });
   });
 
-  socket.on('start', ({ roomName }: { roomName: RoomName }) => {
-    startOver(roomName);
-    resetCards(roomName);
-    io.in(roomName).emit('started', { room: getRooms(), usersInRoom: getUsersInRoom(roomName) });
+  socket.on('start', async ({ roomName }: { roomName: RoomName }) => {
+    await startOver(roomName);
+    await resetCards(roomName);
+    io.in(roomName).emit('started', { room: await getRooms(), usersInRoom: await getUsersInRoom(roomName) });
   });
 };
 

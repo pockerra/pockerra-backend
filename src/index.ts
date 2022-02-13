@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { Server } from 'socket.io';
 import http from 'http';
 import socketCallback from './socket';
+import { connect, connection } from 'mongoose';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,12 +22,23 @@ app.get('/', (req, res) => {
 </html>`);
 });
 
+const connectToDB = async () => {
+  if (connection?.readyState) return true;
+  await connect(process.env.DB_CONNECT || 'mongodb://127.0.0.1:27017', { dbName: 'pockerra' }, () => {
+    console.log('✅ Connected to DB');
+  });
+
+  return true;
+};
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_ORIGIN || `https://pockerra.herokuapp.com`,
+    origin: `http://localhost:8080`,
     methods: ['GET', 'POST'],
   },
 });
+
+connectToDB();
 
 // ========================= socketIO
 io.on('connection', (socket) => {

@@ -1,45 +1,38 @@
 import { Room, RoomName } from '../types';
+import { model } from 'mongoose';
+import roomSchema from '../schema/roomSchema';
 
-let rooms: Array<Room> = [];
+const roomModel = model<Room>('Room', roomSchema);
 
-const addRoom = (roomName: RoomName) => {
-  rooms.push({ name: roomName, hidden: true });
+const addRoom = async (roomName: RoomName) => {
+  // rooms.push({ name: roomName, hidden: true });
+  await roomModel.create({ name: roomName, hidden: true });
+
+  return true;
 };
 
-const removeRoom = (roomName: RoomName) => {
-  rooms.filter((r) => r.name !== roomName);
+const removeRoom = async (roomName: RoomName) => {
+  await roomModel.deleteOne({ name: roomName });
 };
 
-const getRooms = (): Array<Room> => {
-  return rooms;
+const getRooms = async (): Promise<Array<Room>> => {
+  return roomModel.find();
 };
 
-const getRoomByName = (name: string): Room | undefined => {
-  return rooms.find((room) => room.name === name);
+const getRoomByName = async (name: string): Promise<Room | null> => {
+  return roomModel.findOne({ name }, {});
 };
 
 const revealCards = (roomName: RoomName) => {
-  rooms = rooms.map((r) => {
-    if (r.name === roomName) {
-      r.hidden = false;
-    }
-
-    return r;
-  });
+  roomModel.updateOne({ name: roomName }, { hidden: false });
 };
 
 const startOver = (roomName: RoomName) => {
-  rooms = rooms.map((r) => {
-    if (r.name === roomName) {
-      r.hidden = true;
-    }
-
-    return r;
-  });
+  roomModel.updateOne({ name: roomName }, { hidden: true });
 };
 
 const isRoomCreated = (name: RoomName) => {
-  return !!rooms.find((r) => r.name === name);
+  return roomModel.findOne({ name }, {});
 };
 
 export { addRoom, removeRoom, revealCards, isRoomCreated, getRooms, startOver, getRoomByName };
