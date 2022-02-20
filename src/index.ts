@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
 
 const connectToDB = async () => {
   if (connection?.readyState) return true;
-  await connect(process.env.DB_CONNECT || 'mongodb://127.0.0.1:27017', { dbName: 'pockerra' }, () => {
+  await connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', { dbName: 'pockerra' }, () => {
     console.log('✅ Connected to DB');
   });
 
@@ -33,7 +33,7 @@ const connectToDB = async () => {
 
 const io = new Server(server, {
   cors: {
-    origin: `http://localhost:8080`,
+    origin: process.env.CLIENT_ORIGIN || `http://localhost:8080`,
     methods: ['GET', 'POST'],
   },
 });
