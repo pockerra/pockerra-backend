@@ -2,7 +2,7 @@ import { Socket, Server } from 'socket.io';
 import { DefaultEventsMap } from 'socket.io/dist/typed-events';
 import { RoomName, UserId } from './types';
 import { Card } from './types/user';
-import { addUser, getUser, getUsersInRoom, removeUser, resetCards, selectCard } from './repository/users';
+import { addUser, getUser, getUsersInRoom, removeUser, resetCards, selectCard } from './repository/user';
 import { addRoom, getRoomByName, getRooms, isRoomCreated, revealCards, startOver } from './repository/room';
 
 const socketCallback = async (socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap>, io: Server) => {
