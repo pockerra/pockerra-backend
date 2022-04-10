@@ -41,17 +41,20 @@ const socketCallback = async (socket: Socket<DefaultEventsMap, DefaultEventsMap,
 
   socket.on('reveal', async ({ roomName }: { roomName: RoomName }) => {
     await revealCards(roomName);
-    io.in(roomName).emit('revealed', { room: await getRooms() });
+    io.in(roomName).emit('revealed', { room: await getRoomByName(roomName) });
   });
 
   socket.on('start-countdown', async ({ roomName }: { roomName: RoomName }) => {
-    socket.to(roomName).emit('start-countdown', { room: await getRooms() });
+    socket.to(roomName).emit('start-countdown', { room: await getRoomByName(roomName) });
   });
 
   socket.on('start', async ({ roomName }: { roomName: RoomName }) => {
     await startOver(roomName);
     await resetCards(roomName);
-    io.in(roomName).emit('started', { room: await getRooms(), usersInRoom: await getUsersInRoom(roomName) });
+    io.in(roomName).emit('started', {
+      room: await getRoomByName(roomName),
+      usersInRoom: await getUsersInRoom(roomName),
+    });
   });
 };
 
