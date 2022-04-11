@@ -1,40 +1,28 @@
 // noinspection JSIgnoredPromiseFromCall
-
 import { RoomName, User, UserId } from '../types';
 import { Card } from '../types/user';
-import { model, Schema } from 'mongoose';
-
-const userSchema = new Schema<User>({
-  id: { type: String, required: true },
-  name: { type: String, required: true },
-  room: { type: String, required: true },
-  card: { type: Number, required: false },
-});
-
-const userModel = model<User>('User', userSchema);
+import { userModel } from '../model/user';
 
 const addUser = async ({ id, name, room }: User) => {
   name = name.trim().toLowerCase();
   room = room?.trim().toLowerCase();
-
-  const existingUser = await userModel.exists({ id, room });
-
   if (!name || !room) return { error: 'Username and room are required.' };
-  if (existingUser) return { error: 'Username already exists.' };
+
+  const userExists = await userModel.exists({ id, room });
+  if (userExists) return { error: 'Username already exists.' };
 
   const user = { id, name, room };
-
   const doc = await userModel.create(user);
-
-  await doc.save();
-
-  return { user };
+  try {
+    await doc.save();
+    return { user };
+  } catch (err) {
+    return { error: err };
+  }
 };
 
 const removeUser = async (id: UserId) => {
   await userModel.deleteOne({ id });
-
-  return true;
 };
 
 const getUser = async (id: UserId) => {
@@ -46,8 +34,6 @@ const selectCard = async (id: UserId, card: Card) => {
 
   if (!user) return { error: 'User not found.' };
   await userModel.updateOne({ id }, { $set: { card } });
-
-  return true;
 };
 
 const resetCards = async (roomName: RoomName) => {

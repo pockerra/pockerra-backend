@@ -1,14 +1,8 @@
 import { Room, RoomName } from '../types';
-import { model } from 'mongoose';
-import roomSchema from '../schema/roomSchema';
-
-const roomModel = model<Room>('Room', roomSchema);
+import { roomModel } from '../model/room';
 
 const addRoom = async (roomName: RoomName) => {
-  // rooms.push({ name: roomName, hidden: true });
   await roomModel.create({ name: roomName, hidden: true });
-
-  return true;
 };
 
 const removeRoom = async (roomName: RoomName) => {

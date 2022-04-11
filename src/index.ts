@@ -26,9 +26,8 @@ const connectToDB = async () => {
   if (connection?.readyState) return true;
   await connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', { dbName: 'pockerra' }, () => {
     console.log('✅ Connected to DB');
+    return Promise.resolve();
   });
-
-  return true;
 };
 
 const io = new Server(server, {
@@ -38,11 +37,10 @@ const io = new Server(server, {
   },
 });
 
-connectToDB();
-
-// ========================= socketIO
-io.on('connection', (socket) => {
-  socketCallback(socket, io);
+connectToDB().then(() => {
+  io.on('connection', (socket) => {
+    socketCallback(socket, io);
+  });
 });
 
 server.listen(PORT, () => {
