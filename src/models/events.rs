@@ -20,6 +20,7 @@ pub struct RoomJoinPayload {
     pub room_id: String,
     pub display_name: String,
     pub role: Option<Role>,
+    pub player_id: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

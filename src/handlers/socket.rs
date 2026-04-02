@@ -120,51 +120,77 @@ pub async fn on_connect(socket: SocketRef, state: State<Arc<AppState>>, io: Sock
         move |socket: SocketRef, Data::<RoomJoinPayload>(data)| {
             let state = state.clone();
             async move {
-                let player_id = Uuid::new_v4().to_string();
-                let role = data.role.unwrap_or(Role::Participant);
-
-                let player = Player {
-                    id: player_id.clone(),
-                    name: data.display_name,
-                    role,
-                    avatar: None,
-                    has_voted: false,
+                // Check if this is a reconnect (player_id matches an existing player in the room)
+                let is_reconnect = if let Some(ref pid) = data.player_id {
+                    state
+                        .rooms
+                        .get(&data.room_id)
+                        .is_some_and(|rs| rs.players.iter().any(|p| p.id == *pid))
+                } else {
+                    false
                 };
 
-                let room_exists = {
-                    if let Some(mut rs) = state.rooms.get_mut(&data.room_id) {
-                        rs.players.push(player.clone());
-                        true
-                    } else {
-                        false
+                let player_id = if is_reconnect {
+                    data.player_id.unwrap()
+                } else {
+                    let player_id = Uuid::new_v4().to_string();
+                    let role = data.role.unwrap_or(Role::Participant);
+
+                    let player = Player {
+                        id: player_id.clone(),
+                        name: data.display_name,
+                        role,
+                        avatar: None,
+                        has_voted: false,
+                    };
+
+                    let room_exists = {
+                        if let Some(mut rs) = state.rooms.get_mut(&data.room_id) {
+                            rs.players.push(player.clone());
+                            true
+                        } else {
+                            false
+                        }
+                    };
+
+                    if !room_exists {
+                        emit_error(&socket, "Room not found", "ROOM_NOT_FOUND");
+                        return;
                     }
+
+                    // Broadcast new player to others in room (excludes sender)
+                    broadcast_to_room(
+                        &socket,
+                        &data.room_id,
+                        "room:joined",
+                        &RoomJoinedResponse { player },
+                    );
+
+                    player_id
                 };
 
-                if !room_exists {
-                    emit_error(&socket, "Room not found", "ROOM_NOT_FOUND");
-                    return;
+                // Remove stale connection for this player (from previous socket)
+                let stale_sid: Option<String> = state
+                    .connections
+                    .iter()
+                    .find(|entry| entry.value().0 == player_id && entry.value().1 == data.room_id)
+                    .map(|entry| entry.key().clone());
+                if let Some(sid) = stale_sid {
+                    state.connections.remove(&sid);
                 }
 
                 state
                     .connections
-                    .insert(socket.id.to_string(), (player_id, data.room_id.clone()));
+                    .insert(socket.id.to_string(), (player_id.clone(), data.room_id.clone()));
 
                 socket.join(data.room_id.clone());
-
-                // Broadcast to others in room (excludes sender)
-                broadcast_to_room(
-                    &socket,
-                    &data.room_id,
-                    "room:joined",
-                    &RoomJoinedResponse { player },
-                );
 
                 // Send full state to the joining socket
                 if let Some(rs) = state.rooms.get(&data.room_id) {
                     socket.emit("room:state", &build_room_state_response(&rs)).ok();
                 }
 
-                info!("Player joined room: {}", data.room_id);
+                info!("Player {} {} room: {}", player_id, if is_reconnect { "reconnected to" } else { "joined" }, data.room_id);
             }
         }
     });
