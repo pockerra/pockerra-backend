@@ -130,6 +130,7 @@ pub struct RoomStateResponse {
     pub stories: Vec<Story>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub current_story: Option<Story>,
+    pub votes: Vec<Vote>,
 }
 
 #[derive(Debug, Serialize)]

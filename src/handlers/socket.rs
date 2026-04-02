@@ -44,6 +44,7 @@ fn build_room_state_response(rs: &RoomState) -> RoomStateResponse {
         players: rs.players.clone(),
         stories: rs.stories.clone(),
         current_story,
+        votes: rs.votes.clone(),
     }
 }
 
