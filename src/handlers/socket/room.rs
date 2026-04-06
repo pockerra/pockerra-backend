@@ -40,6 +40,7 @@ pub fn register(socket: &SocketRef, state: &Arc<AppState>) {
                     role: Role::Facilitator,
                     avatar: None,
                     has_voted: false,
+                    connected: true,
                 };
 
                 let room_state = RoomState {
@@ -82,7 +83,27 @@ pub fn register(socket: &SocketRef, state: &Arc<AppState>) {
                 };
 
                 let player_id = if is_reconnect {
-                    data.player_id.unwrap()
+                    let pid = data.player_id.unwrap();
+                    // Mark player as connected again
+                    let updated_player = if let Some(mut rs) = state.rooms.get_mut(&data.room_id) {
+                        if let Some(p) = rs.players.iter_mut().find(|p| p.id == pid) {
+                            p.connected = true;
+                            Some(p.clone())
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    };
+                    if let Some(player) = updated_player {
+                        broadcast_to_room(
+                            &socket,
+                            &data.room_id,
+                            "player:updated",
+                            &crate::models::events::PlayerUpdatedResponse { player },
+                        );
+                    }
+                    pid
                 } else {
                     let player_id = Uuid::new_v4().to_string();
                     let role = data.role.unwrap_or(Role::Participant);
@@ -93,6 +114,7 @@ pub fn register(socket: &SocketRef, state: &Arc<AppState>) {
                         role,
                         avatar: None,
                         has_voted: false,
+                        connected: true,
                     };
 
                     let room_exists = {

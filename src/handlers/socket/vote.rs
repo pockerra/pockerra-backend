@@ -37,7 +37,7 @@ pub fn register(socket: &SocketRef, state: &Arc<AppState>) {
                         let all_voted = rs
                             .players
                             .iter()
-                            .filter(|p| p.role != Role::Spectator)
+                            .filter(|p| p.role != Role::Spectator && p.connected)
                             .all(|p| p.has_voted);
                         should_auto_reveal = all_voted;
                     }
