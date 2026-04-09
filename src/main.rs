@@ -37,13 +37,14 @@ async fn main() -> anyhow::Result<()> {
 
     io.ns("/", socket::on_connect);
 
+    let origins: Vec<axum::http::HeaderValue> = config
+        .cors_origins
+        .iter()
+        .map(|o| o.parse().expect("Invalid CORS origin"))
+        .collect();
+
     let cors = CorsLayer::new()
-        .allow_origin(
-            config
-                .cors_origin
-                .parse::<axum::http::HeaderValue>()
-                .expect("Invalid CORS origin"),
-        )
+        .allow_origin(origins)
         .allow_methods(AllowMethods::any())
         .allow_headers(AllowHeaders::any());
 
